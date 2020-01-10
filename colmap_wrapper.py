@@ -47,15 +47,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--img_dir', type=str, required=True, help='path to file list of h5 train data')
 parser.add_argument('--trgt_dir', required=True, help='path to file list of h5 train data')
 parser.add_argument('--dense', action='store_true', default=False, help='#images')
+parser.add_argument('--single_cam', type=int, default=1, help='controls --single_camera parm of COLMAP')
 
 def cond_mkdir(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def bundle_adjust(frame_dir, target_dir, dense):
-    colmap_template = 'colmap automatic_reconstructor --dense {} --quality low --single_camera 1 --workspace_path {} --image_path {}'
+def bundle_adjust(frame_dir, target_dir, dense, single):
+    colmap_template = 'colmap automatic_reconstructor --dense {} --quality low --single_camera {} --workspace_path {} --image_path {}'
 
-    colmap_cmd = colmap_template.format(1 if dense else 0, target_dir, frame_dir)
+    colmap_cmd = colmap_template.format(1 if dense else 0, single, target_dir, frame_dir)
     args = shlex.split(colmap_cmd)
     p = subprocess.Popen(args)
     p.wait()
@@ -240,7 +241,7 @@ if __name__ == '__main__':
     cond_mkdir(pose_dir)
 
     print("Bundle Adjusting")
-    bundle_adjust(opt.img_dir, reconst_dir, opt.dense)
+    bundle_adjust(opt.img_dir, reconst_dir, opt.dense, opt.single_cam)
     print("Extracting poses")
     images = read_poses(reconst_dir)
     print("Writing Poses")
